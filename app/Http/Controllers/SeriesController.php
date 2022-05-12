@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\SeriesFormRequest;
-use App\Models\Serie;
+use App\Models\Episode;
+use App\Models\Season;
+use App\Models\Series;
 use Illuminate\Http\Request;
 
 
@@ -11,7 +13,7 @@ class SeriesController extends Controller
 {
     public function index(Request $request)
     {
-        $series = Serie::all();
+        $series = Series::all();
         $messagem = $request->session()->get('mensagem');
 
         //return view('series.index', compact('series'));
@@ -29,13 +31,32 @@ class SeriesController extends Controller
     public function store(SeriesFormRequest $request)
     {
 
-        $serie = Serie::create($request->all());
-        $request->session()->flash('mensagem', "Série '{$serie->nome}' adicionada com sucesso");
+        $serie = Series::create($request->all());
+        $seasons = [];
+        for ($i = 1; $i <= $request->seasonsQty; $i++) {
+            $seasons[] = [
+                'series_id' => $serie->id,
+                'number' => $i,
+            ];
+        }
+        Season::insert($seasons);
 
-        return redirect()->route('series.index');
+        $episodes = [];
+        foreach ($serie->seasons as $season) {
+            for ($j = 1; $j <= $request->episodesPerSeason; $j++) {
+                $episodes[] = [
+                    'season_id' => $season->id,
+                    'number' => $j
+                ];
+            }
+        }
+        Episode::insert($episodes);
+
+        return to_route('series.index')
+            ->with('mensagem', "Série '{$serie->nome}' adicionada com sucesso");
     }
 
-    public function destroy(Request $request, Serie $series){
+    public function destroy(Request $request, Series $series){
 
         $series->delete();
         // $request->session()->flash('mensagem', "Série '{$series->nome}'  removida com sucesso");
@@ -44,12 +65,12 @@ class SeriesController extends Controller
 
     }
 
-    public function edit(Serie $series)
+    public function edit(Series $series)
     {
         return view('series.edit')->with('serie', $series);
     }
 
-    public function update(Serie $series, SeriesFormRequest $request)
+    public function update(Series $series, SeriesFormRequest $request)
     {
         $series->fill($request->all());
         $series->save();

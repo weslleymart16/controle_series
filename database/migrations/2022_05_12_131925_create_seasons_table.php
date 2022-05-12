@@ -15,8 +15,8 @@ return new class extends Migration
     {
         Schema::create('seasons', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('numero');
-            $table->foreignId('series_id')->constrained(); // essa linha de código substitui as comentadas.
+            $table->unsignedBigInteger('number');
+            $table->foreignId('series_id')->constrained()->onDelete('cascade'); // essa linha de código substitui as comentadas.
             // $table->unsignedBigInteger('series_id');
             // $table->foreign('series_id')->references('id')->on('series');
             $table->timestamps();
